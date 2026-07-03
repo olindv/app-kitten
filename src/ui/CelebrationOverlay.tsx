@@ -57,7 +57,7 @@ export function CelebrationOverlay() {
   if (!celebration) return null;
 
   return (
-    <View style={styles.overlay} pointerEvents="none" testID="celebration">
+    <View style={[StyleSheet.absoluteFill, styles.overlay]} pointerEvents="none" testID="celebration">
       <View style={styles.center}>
         {Array.from({ length: PARTICLE_COUNT }, (_, i) => (
           <StarParticle key={`${celebration.id}-${i}`} index={i} />
@@ -77,7 +77,6 @@ export function CelebrationOverlay() {
 
 const styles = StyleSheet.create({
   overlay: {
-    ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 10,

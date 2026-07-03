@@ -6,7 +6,7 @@
 
 Проектирование. Код появится после утверждения спецификации.
 
-- Дизайн-спецификация: [docs/superpowers/specs/2026-07-03-kitten-game-design.md](docs/superpowers/specs/2026-07-03-kitten-game-design.md)
+- Дизайн-спецификация: [docs/specs/2026-07-03-kitten-game-design.md](docs/specs/2026-07-03-kitten-game-design.md)
 
 ## Стек (планируемый)
 

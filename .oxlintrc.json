@@ -1,0 +1,13 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "react", "oxc"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn"
+  },
+  "rules": {
+    "react/react-in-jsx-scope": "off",
+    "react/style-prop-object": "off"
+  },
+  "ignorePatterns": ["android/**", "ios/**", "dist/**", ".expo/**", "node_modules/**"]
+}

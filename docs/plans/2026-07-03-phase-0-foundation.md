@@ -6,7 +6,7 @@
 
 **Architecture:** Expo (последний стабильный SDK, TypeScript) с Continuous Native Generation — папка `android/` генерируется `expo run:android` и не хранится в git. Вся будущая логика живет в `src/`, вход через `index.ts` → `src/app/App.tsx`.
 
-**Tech Stack:** Expo + TypeScript, React Navigation (native-stack), Zustand, AsyncStorage, react-native-svg, Reanimated, Gesture Handler, expo-audio, Jest (jest-expo) + @testing-library/react-native, ESLint (eslint-config-expo) + Prettier.
+**Tech Stack:** Expo + TypeScript, React Navigation (native-stack), Zustand, AsyncStorage, react-native-svg, Reanimated, Gesture Handler, expo-audio, Jest (jest-expo) + @testing-library/react-native, oxlint + Prettier.
 
 **Reference:** спека `docs/specs/2026-07-03-kitten-game-design.md` (§8 стек, §9 архитектура).
 
@@ -24,10 +24,12 @@
 ### Task 1: Скаффолд Expo-проекта в текущую папку
 
 **Files:**
+
 - Create: `package.json`, `app.json`, `tsconfig.json`, `index.ts`, `App.tsx`, `assets/*` (из шаблона)
 - Modify: `.gitignore` (слить с шаблонным + добавить `/android`, `/ios`)
 
 **Interfaces:**
+
 - Produces: рабочий Expo-проект; `npm run start` поднимает Metro. Последующие задачи полагаются на скрипты `package.json` и `app.json`.
 
 - [ ] **Step 1: Скаффолд во временную папку** (папка непуста — create-expo-app в неё напрямую откажется)
@@ -109,30 +111,48 @@ git commit -m "chore: scaffold Expo blank-typescript app"
 
 ---
 
-### Task 2: ESLint + Prettier
+### Task 2: oxlint + Prettier
+
+_Изменение по ходу выполнения: владелец проекта выбрал oxlint вместо ESLint._
 
 **Files:**
-- Create: `eslint.config.js` (генерирует expo), `.prettierrc`
-- Modify: `package.json` (скрипты)
+
+- Create: `.oxlintrc.json`, `.prettierrc`
+- Modify: `package.json` (скрипты, devDependencies)
 
 **Interfaces:**
+
 - Produces: `npm run lint` и `npm run format` — используются в конце каждой следующей задачи.
 
-- [ ] **Step 1: Сгенерировать конфиг ESLint**
+- [x] **Step 1: Установить oxlint и prettier**
 
 ```powershell
-npx expo lint
+npm install --save-dev oxlint prettier
 ```
 
-Expected: создан `eslint.config.js`, установлен `eslint-config-expo`, первый прогон без ошибок.
+- [x] **Step 2: Конфиги**
 
-- [ ] **Step 2: Добавить Prettier**
+`.oxlintrc.json`:
 
-```powershell
-npm install --save-dev prettier eslint-config-prettier
+```json
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "react", "oxc"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn"
+  },
+  "rules": {
+    "react/react-in-jsx-scope": "off",
+    "react/style-prop-object": "off"
+  },
+  "ignorePatterns": ["android/**", "ios/**", "dist/**", ".expo/**", "node_modules/**"]
+}
 ```
 
-Создать `.prettierrc`:
+Оба off-правила — ложные срабатывания для React Native: новый JSX transform не требует `React` в скоупе, а `style` в RN — объект из `StyleSheet.create`.
+
+`.prettierrc`:
 
 ```json
 {
@@ -142,39 +162,29 @@ npm install --save-dev prettier eslint-config-prettier
 }
 ```
 
-В `eslint.config.js` добавить `eslint-config-prettier` последним элементом конфигурации (отключает конфликтующие стилевые правила):
-
-```js
-const { defineConfig } = require('eslint/config');
-const expoConfig = require('eslint-config-expo/flat');
-const prettierConfig = require('eslint-config-prettier');
-
-module.exports = defineConfig([expoConfig, prettierConfig, { ignores: ['dist/*', 'android/*', 'ios/*'] }]);
-```
-
-- [ ] **Step 3: Скрипты в package.json**
+- [x] **Step 3: Скрипты в package.json**
 
 В `"scripts"` добавить:
 
 ```json
-"lint": "expo lint",
+"lint": "oxlint",
 "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\""
 ```
 
-- [ ] **Step 4: Прогнать и проверить**
+- [x] **Step 4: Прогнать и проверить**
 
 ```powershell
 npm run format
 npm run lint
 ```
 
-Expected: format переписывает файлы, lint — 0 errors.
+Expected: format переписывает файлы, lint — 0 errors/warnings.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add -A
-git commit -m "chore: add eslint (expo config) and prettier"
+git commit -m "chore: add oxlint and prettier"
 ```
 
 ---
@@ -182,10 +192,12 @@ git commit -m "chore: add eslint (expo config) and prettier"
 ### Task 3: Runtime-зависимости
 
 **Files:**
+
 - Modify: `package.json`, `package-lock.json`
 - Create: `babel.config.js` (если шаблон не создал)
 
 **Interfaces:**
+
 - Produces: установленные и совместимые с SDK версии: `@react-navigation/native`, `@react-navigation/native-stack`, `react-native-screens`, `react-native-safe-area-context`, `react-native-gesture-handler`, `react-native-reanimated`, `react-native-svg`, `expo-audio`, `@react-native-async-storage/async-storage`, `zustand`.
 
 - [ ] **Step 1: Установить через expo install** (подбирает версии под SDK)
@@ -231,11 +243,13 @@ git commit -m "chore: add navigation, state, svg, animation and audio deps"
 ### Task 4: Структура src/ и вход приложения
 
 **Files:**
+
 - Create: `src/app/App.tsx`, `src/screens/PlaceholderScreen.tsx`
 - Modify: `index.ts`
 - Delete: `App.tsx` (корневой, из шаблона)
 
 **Interfaces:**
+
 - Produces: `App` (named export из `src/app/App.tsx`) — корневой компонент с провайдерами `GestureHandlerRootView` → `SafeAreaProvider` → `NavigationContainer`; тип `RootStackParamList = { Game: undefined }`. Фаза 1 добавляет экраны в этот стек.
 
 - [ ] **Step 1: Создать PlaceholderScreen**
@@ -336,10 +350,12 @@ git commit -m "feat: app entry with navigation shell and placeholder screen"
 ### Task 5: Jest + смоук-тест
 
 **Files:**
+
 - Create: `src/app/__tests__/App.test.tsx`
 - Modify: `package.json` (jest-конфиг, скрипт, dev-зависимости)
 
 **Interfaces:**
+
 - Consumes: `App` из `src/app/App.tsx` (Task 4).
 - Produces: `npm test` — обязательный шаг всех задач фазы 1+.
 
@@ -411,9 +427,11 @@ git commit -m "test: add jest-expo setup with app smoke test"
 ### Task 6: Нативная сборка и запуск на эмуляторе
 
 **Files:**
+
 - Create: `android/` (генерируется, в git не попадает — см. `.gitignore`)
 
 **Interfaces:**
+
 - Consumes: всё предыдущее.
 - Produces: подтверждение, что весь стек (Reanimated, SVG, навигация) собирается нативно. Далее фаза 1 разрабатывается против этой сборки.
 
@@ -471,6 +489,7 @@ git commit -m "chore: verify native android build (CNG, android/ git-ignored)"
 **Files:** нет (только git-конфигурация).
 
 **Interfaces:**
+
 - Produces: `origin` → GitHub, ветка `main` запушена. Все дальнейшие фазы пушатся сюда.
 
 - [ ] **Step 1: Создать репозиторий и push**

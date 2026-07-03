@@ -59,8 +59,11 @@ export function YardBackground() {
       {/* небо и трава */}
       <View style={styles.sky} />
       <View style={styles.grass} />
-      {/* солнце */}
-      <Sprite style={{ left: '8%', top: '6%', width: '16%', aspectRatio: 1 }} viewBox="0 0 100 100">
+      {/* солнце — правее HUD потребностей, левее облака */}
+      <Sprite
+        style={{ left: '33%', top: '4%', width: '16%', aspectRatio: 1 }}
+        viewBox="0 0 100 100"
+      >
         <Circle cx={50} cy={50} r={26} fill="#F5D76E" />
         <Circle cx={50} cy={50} r={34} fill="#F5D76E" opacity={0.35} />
       </Sprite>

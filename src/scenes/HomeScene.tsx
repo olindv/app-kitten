@@ -3,11 +3,12 @@ import { StyleSheet, View, type ViewStyle } from 'react-native';
 import Svg, { Circle, Ellipse, Line, Path, Rect } from 'react-native-svg';
 
 // Центры интерактивных зон в процентах экрана. Позиции согласованы со спрайтами ниже.
-// Когтеточка, клубок и коробка нарисованы, но станут интерактивными в фазе 2 (квесты).
 export const HOME_SPOTS = [
   { id: 'bowl', left: '28%', top: '87%' },
   { id: 'bed', left: '84%', top: '89%' },
   { id: 'owner', left: '78%', top: '48%' },
+  { id: 'ball', left: '54%', top: '90%' },
+  { id: 'scratcher', left: '9%', top: '75%' },
 ] as const;
 
 export type HomeSpotId = (typeof HOME_SPOTS)[number]['id'];

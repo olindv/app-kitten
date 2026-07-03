@@ -13,6 +13,7 @@ import { useProfileStore } from '../store/profileStore';
 import { useProgressStore } from '../store/progressStore';
 import { NeedsHud } from '../ui/NeedsHud';
 import { StarBar } from '../ui/StarBar';
+import { TapBurst } from '../ui/TapBurst';
 import { JournalModal } from './JournalModal';
 
 export const TICK_INTERVAL_MS = 30_000;
@@ -29,6 +30,8 @@ export function GameScreen() {
   const needs = useNeedsStore((s) => s.needs);
   const [scene, setScene] = useState<SceneId>('home');
   const [journalOpen, setJournalOpen] = useState(false);
+  const [ballBurst, setBallBurst] = useState(0);
+  const [scratchBurst, setScratchBurst] = useState(0);
   const [activity, setActivity] = useState<Activity>('none');
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const breath = useRef(new Animated.Value(1)).current;
@@ -120,6 +123,17 @@ export function GameScreen() {
             : 'idle';
 
   const onHomeSpotPress = (id: HomeSpotId) => {
+    // Клубок и когтеточка — мгновенные тапы, активностями не блокируются
+    if (id === 'ball') {
+      setBallBurst((n) => n + 1);
+      useProgressStore.getState().questEvent('ball-tapped');
+      return;
+    }
+    if (id === 'scratcher') {
+      setScratchBurst((n) => n + 1);
+      useProgressStore.getState().questEvent('scratch-tapped');
+      return;
+    }
     if (activity !== 'none') return;
     if (id === 'bowl') feedNow(false);
     // Ключевая сценка (спека §4): голодный котёнок просит — хозяин наполняет миску
@@ -151,7 +165,12 @@ export function GameScreen() {
             testID={`spot-${spot.id}`}
             style={[styles.spot, { left: spot.left, top: spot.top }]}
             onPress={() => onHomeSpotPress(spot.id)}
-          />
+          >
+            {spot.id === 'ball' && <TapBurst emoji="🧶" trigger={ballBurst} testID="ball-burst" />}
+            {spot.id === 'scratcher' && (
+              <TapBurst emoji="🐾" trigger={scratchBurst} testID="scratch-burst" />
+            )}
+          </Pressable>
         ))}
       {scene === 'yard' &&
         YARD_SPOTS.map((spot) => (

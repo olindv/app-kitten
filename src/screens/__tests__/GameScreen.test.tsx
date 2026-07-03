@@ -122,3 +122,62 @@ test('маунт записывает день игры', async () => {
   await render(<GameScreen />);
   expect(useProgressStore.getState().playDays).toEqual(['2026-07-03']);
 });
+
+test('тапы по клубку двигают квест play-ball и завершают его', async () => {
+  await render(<GameScreen />);
+  for (let i = 0; i < 4; i++) await fireEvent.press(screen.getByTestId('spot-ball'));
+  expect(
+    useProgressStore.getState().activeQuests.find((q) => q.questId === 'play-ball')?.progress,
+  ).toBe(4);
+  await fireEvent.press(screen.getByTestId('spot-ball'));
+  expect(useProgressStore.getState().stars).toBe(1);
+  expect(useProgressStore.getState().celebration?.id).toBe('play-ball');
+});
+
+test('тап по когтеточке эмитит scratch-tapped', async () => {
+  // делаем scratch-post активным
+  useProgressStore.setState({
+    activeQuests: [
+      { questId: 'scratch-post', stage: 0, progress: 0 },
+      { questId: 'catch-butterflies', stage: 0, progress: 0 },
+      { questId: 'play-ball', stage: 0, progress: 0 },
+    ],
+  });
+  await render(<GameScreen />);
+  await fireEvent.press(screen.getByTestId('spot-scratcher'));
+  expect(
+    useProgressStore.getState().activeQuests.find((q) => q.questId === 'scratch-post')?.progress,
+  ).toBe(1);
+});
+
+test('кормление по просьбе эмитит fed-when-asked', async () => {
+  useProgressStore.setState({
+    activeQuests: [
+      { questId: 'ask-food', stage: 0, progress: 0 },
+      { questId: 'catch-butterflies', stage: 0, progress: 0 },
+      { questId: 'play-ball', stage: 0, progress: 0 },
+    ],
+  });
+  // голодный котёнок просит (hunger < 30)
+  useNeedsStore.setState({ needs: { hunger: 10, energy: 100, mood: 100, updatedAt: T0 } });
+  await render(<GameScreen />);
+  await fireEvent.press(screen.getByTestId('spot-owner'));
+  await advance(EAT_DURATION_MS);
+  expect(useProgressStore.getState().stars).toBe(1);
+  expect(useProgressStore.getState().celebration?.id).toBe('ask-food');
+});
+
+test('кормление из миски без просьбы НЕ засчитывает квест', async () => {
+  useProgressStore.setState({
+    activeQuests: [
+      { questId: 'ask-food', stage: 0, progress: 0 },
+      { questId: 'catch-butterflies', stage: 0, progress: 0 },
+      { questId: 'play-ball', stage: 0, progress: 0 },
+    ],
+  });
+  useNeedsStore.setState({ needs: { hunger: 10, energy: 100, mood: 100, updatedAt: T0 } });
+  await render(<GameScreen />);
+  await fireEvent.press(screen.getByTestId('spot-bowl'));
+  await advance(EAT_DURATION_MS);
+  expect(useProgressStore.getState().stars).toBe(0);
+});

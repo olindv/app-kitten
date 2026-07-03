@@ -7,6 +7,6 @@ test('фон дома рендерится', async () => {
   expect(screen.getByTestId('home-background')).toBeTruthy();
 });
 
-test('интерактивные точки фазы 1: миска, лежанка, хозяин', () => {
-  expect(HOME_SPOTS.map((s) => s.id)).toEqual(['bowl', 'bed', 'owner']);
+test('интерактивные точки: миска, лежанка, хозяин + клубок и когтеточка (фаза 2)', () => {
+  expect(HOME_SPOTS.map((s) => s.id)).toEqual(['bowl', 'bed', 'owner', 'ball', 'scratcher']);
 });

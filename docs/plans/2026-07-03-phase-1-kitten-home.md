@@ -460,9 +460,7 @@ beforeEach(async () => {
 });
 
 test('createProfile кладёт профиль в стор и в AsyncStorage', async () => {
-  useProfileStore
-    .getState()
-    .createProfile({ name: 'Мурзик', coatId: 'ginger', collarColor: null });
+  useProfileStore.getState().createProfile({ name: 'Мурзик', coatId: 'ginger', collarColor: null });
   await flushPersist();
 
   expect(useProfileStore.getState().profile?.name).toBe('Мурзик');
@@ -1098,7 +1096,11 @@ export function CreateCatScreen() {
           placeholder={strings.createCat.namePlaceholder}
           maxLength={20}
         />
-        <Pressable testID="random-name" style={styles.dice} onPress={() => setName(randomKittenName())}>
+        <Pressable
+          testID="random-name"
+          style={styles.dice}
+          onPress={() => setName(randomKittenName())}
+        >
           <Text style={styles.diceText}>🎲</Text>
         </Pressable>
       </View>
@@ -1438,7 +1440,16 @@ export function HomeBackground() {
       <Rect x={0} y={0} width={100} height={62} fill="#F6E7C9" />
       <Rect x={0} y={62} width={100} height={38} fill="#E3B584" />
       {/* окно */}
-      <Rect x={8} y={8} width={22} height={18} rx={1.5} fill="#B5E0F5" stroke="#8A6B4A" strokeWidth={1.2} />
+      <Rect
+        x={8}
+        y={8}
+        width={22}
+        height={18}
+        rx={1.5}
+        fill="#B5E0F5"
+        stroke="#8A6B4A"
+        strokeWidth={1.2}
+      />
       <Line x1={19} y1={8} x2={19} y2={26} stroke="#8A6B4A" strokeWidth={0.8} />
       <Line x1={8} y1={17} x2={30} y2={17} stroke="#8A6B4A" strokeWidth={0.8} />
       {/* кухонный уголок: плита */}
@@ -1567,12 +1578,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { clock } from '../../app/clock';
 import { useNeedsStore } from '../../store/needsStore';
 import { useProfileStore } from '../../store/profileStore';
-import {
-  EAT_DURATION_MS,
-  GameScreen,
-  PET_DURATION_MS,
-  SLEEP_DURATION_MS,
-} from '../GameScreen';
+import { EAT_DURATION_MS, GameScreen, PET_DURATION_MS, SLEEP_DURATION_MS } from '../GameScreen';
 
 const T0 = 1_700_000_000_000;
 const MIN = 60 * 1000;
@@ -1591,7 +1597,9 @@ afterEach(() => {
 });
 
 test('тик на маунте списывает сытость по прошедшему времени', async () => {
-  useNeedsStore.setState({ needs: { hunger: 100, energy: 100, mood: 100, updatedAt: T0 - 30 * MIN } });
+  useNeedsStore.setState({
+    needs: { hunger: 100, energy: 100, mood: 100, updatedAt: T0 - 30 * MIN },
+  });
   await render(<GameScreen />);
   expect(useNeedsStore.getState().needs.hunger).toBeCloseTo(98);
 });

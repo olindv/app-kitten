@@ -71,7 +71,5 @@ export function shadeColor(hex: string, factor: number): string {
     const value = (n >> shift) & 0xff;
     return Math.min(255, Math.max(0, Math.round(value * factor)));
   };
-  return `#${((channel(16) << 16) | (channel(8) << 8) | channel(0))
-    .toString(16)
-    .padStart(6, '0')}`;
+  return `#${((channel(16) << 16) | (channel(8) << 8) | channel(0)).toString(16).padStart(6, '0')}`;
 }

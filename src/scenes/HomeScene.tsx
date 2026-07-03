@@ -42,7 +42,10 @@ export function HomeBackground() {
       <View style={styles.wall} />
       <View style={styles.floor} />
       {/* окно с солнышком */}
-      <Sprite style={{ left: '34%', top: '12%', width: '30%', aspectRatio: 1.1 }} viewBox="0 0 110 100">
+      <Sprite
+        style={{ left: '34%', top: '12%', width: '30%', aspectRatio: 1.1 }}
+        viewBox="0 0 110 100"
+      >
         <Rect x={5} y={5} width={100} height={90} rx={6} fill="#8A6B4A" />
         <Rect x={12} y={12} width={86} height={76} fill="#B5E0F5" />
         <Circle cx={78} cy={32} r={10} fill="#F5D76E" />
@@ -103,7 +106,10 @@ export function HomeBackground() {
         <Rect x={8} y={30} width={92} height={64} fill="#C9A063" stroke="#A9834C" strokeWidth={4} />
       </Sprite>
       {/* клубок */}
-      <Sprite style={{ left: '50%', bottom: '4%', width: '8%', aspectRatio: 1 }} viewBox="0 0 100 100">
+      <Sprite
+        style={{ left: '50%', bottom: '4%', width: '8%', aspectRatio: 1 }}
+        viewBox="0 0 100 100"
+      >
         <Circle cx={50} cy={50} r={44} fill="#E05A7A" />
         <Path d="M14 40 Q50 60 86 36" stroke="#C23D5E" strokeWidth={7} fill="none" />
         <Path d="M20 66 Q54 82 84 58" stroke="#C23D5E" strokeWidth={7} fill="none" />

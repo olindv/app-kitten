@@ -6,7 +6,7 @@ import { clock } from '../app/clock';
 import { Cat, type CatPose } from '../cat/Cat';
 import { CatchTapLayer } from '../minigames/catchTap/CatchTapLayer';
 import { isAskingForFood } from '../needs/needsLogic';
-import { catchKindFor, currentStage } from '../quests/engine';
+import { catchKindFor, currentStage, isAwaitingDelivery } from '../quests/engine';
 import type { SceneId } from '../quests/registry';
 import { HOME_SPOTS, HomeBackground, type HomeSpotId } from '../scenes/HomeScene';
 import { YARD_SPOTS, YardBackground, type YardSpotId } from '../scenes/YardScene';
@@ -146,9 +146,12 @@ export function GameScreen() {
     }
   };
 
+  const awaitingDelivery = activeQuests.some(isAwaitingDelivery);
+
   const onYardSpotPress = (id: YardSpotId) => {
-    if (activity !== 'none') return;
-    void id; // доставка мышек хозяину — подключается вместе с мини-игрой
+    if (id === 'yard-owner' && awaitingDelivery) {
+      useProgressStore.getState().questEvent('mice-delivered');
+    }
   };
 
   const onCatPress = () => {
@@ -182,7 +185,28 @@ export function GameScreen() {
             testID={`spot-${spot.id}`}
             style={[styles.spot, { left: spot.left, top: spot.top }]}
             onPress={() => onYardSpotPress(spot.id)}
-          />
+          >
+            {spot.id === 'yard-owner' && awaitingDelivery && (
+              <Animated.View
+                testID="deliver-bubble"
+                style={[
+                  styles.deliverBubble,
+                  {
+                    transform: [
+                      {
+                        scale: arrowPulse.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [1, 1.12],
+                        }),
+                      },
+                    ],
+                  },
+                ]}
+              >
+                <Text style={styles.bubbleText}>🐭</Text>
+              </Animated.View>
+            )}
+          </Pressable>
         ))}
       {scene === 'yard' &&
         activeQuests.map((q) => {
@@ -292,6 +316,17 @@ const styles = StyleSheet.create({
     borderColor: '#D9C7A8',
   },
   bubbleText: { fontSize: 24 },
+  deliverBubble: {
+    position: 'absolute',
+    top: -46,
+    alignSelf: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderWidth: 2,
+    borderColor: '#D9C7A8',
+  },
   hearts: { position: 'absolute', top: -8, right: -16, fontSize: 28, zIndex: 1 },
   arrow: {
     position: 'absolute',

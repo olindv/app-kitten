@@ -182,6 +182,31 @@ test('во дворе ловятся мышки, прогресс идёт по 
   expect(screen.queryByTestId('catch-layer-mouse')).toBeNull();
 });
 
+test('после трёх мышек — облачко у хозяина, тап отдаёт мышек и завершает квест', async () => {
+  useProgressStore.setState({
+    activeQuests: [
+      { questId: 'catch-mice', stage: 1, progress: 0 }, // стадия доставки
+      { questId: 'catch-butterflies', stage: 0, progress: 0 },
+      { questId: 'play-ball', stage: 0, progress: 0 },
+    ],
+  });
+  await render(<GameScreen />);
+  await fireEvent.press(screen.getByTestId('go-yard'));
+  expect(screen.getByTestId('deliver-bubble')).toBeTruthy();
+  await fireEvent.press(screen.getByTestId('spot-yard-owner'));
+  expect(useProgressStore.getState().stars).toBe(3);
+  expect(useProgressStore.getState().celebration?.id).toBe('catch-mice');
+  expect(screen.queryByTestId('deliver-bubble')).toBeNull();
+});
+
+test('без стадии доставки облачка нет и тап по хозяину ничего не делает', async () => {
+  await render(<GameScreen />);
+  await fireEvent.press(screen.getByTestId('go-yard'));
+  expect(screen.queryByTestId('deliver-bubble')).toBeNull();
+  await fireEvent.press(screen.getByTestId('spot-yard-owner'));
+  expect(useProgressStore.getState().stars).toBe(0);
+});
+
 test('дома слоёв ловли нет', async () => {
   await render(<GameScreen />);
   expect(screen.queryByTestId('catch-layer-mouse')).toBeNull();

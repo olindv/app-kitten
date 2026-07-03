@@ -5,25 +5,34 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { clock } from '../app/clock';
 import { Cat, type CatPose } from '../cat/Cat';
 import { isAskingForFood } from '../needs/needsLogic';
+import type { SceneId } from '../quests/registry';
 import { HOME_SPOTS, HomeBackground, type HomeSpotId } from '../scenes/HomeScene';
+import { YARD_SPOTS, YardBackground, type YardSpotId } from '../scenes/YardScene';
 import { useNeedsStore } from '../store/needsStore';
 import { useProfileStore } from '../store/profileStore';
+import { useProgressStore } from '../store/progressStore';
 import { NeedsHud } from '../ui/NeedsHud';
+import { StarBar } from '../ui/StarBar';
+import { JournalModal } from './JournalModal';
 
 export const TICK_INTERVAL_MS = 30_000;
 export const EAT_DURATION_MS = 2_000;
 export const PET_DURATION_MS = 1_500;
 export const SLEEP_DURATION_MS = 8_000; // спека §4: короткая анимация сна, не блокирует
 const BREATH_HALF_CYCLE_MS = 1_600;
+const ARROW_PULSE_MS = 900;
 
 type Activity = 'none' | 'eating' | 'sleeping' | 'petting';
 
 export function GameScreen() {
   const profile = useProfileStore((s) => s.profile);
   const needs = useNeedsStore((s) => s.needs);
+  const [scene, setScene] = useState<SceneId>('home');
+  const [journalOpen, setJournalOpen] = useState(false);
   const [activity, setActivity] = useState<Activity>('none');
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const breath = useRef(new Animated.Value(1)).current;
+  const arrowPulse = useRef(new Animated.Value(0)).current;
 
   // «Дыхание»: лёгкая пульсация масштаба котёнка
   useEffect(() => {
@@ -45,9 +54,33 @@ export function GameScreen() {
     return () => loop.stop();
   }, [breath]);
 
-  // Тик потребностей: на маунте, при возврате в foreground и раз в TICK_INTERVAL_MS
+  // Стрелка сцены мягко покачивается — приглашает потрогать
   useEffect(() => {
-    const doTick = () => useNeedsStore.getState().tick(clock.now());
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(arrowPulse, {
+          toValue: 1,
+          duration: ARROW_PULSE_MS,
+          useNativeDriver: true,
+        }),
+        Animated.timing(arrowPulse, {
+          toValue: 0,
+          duration: ARROW_PULSE_MS,
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [arrowPulse]);
+
+  // Тик потребностей + день игры: на маунте, при возврате в foreground и раз в TICK_INTERVAL_MS
+  useEffect(() => {
+    const doTick = () => {
+      const now = clock.now();
+      useNeedsStore.getState().tick(now);
+      useProgressStore.getState().recordPlayDay(now);
+    };
     doTick();
     const sub = AppState.addEventListener('change', (state) => {
       if (state === 'active') doTick();
@@ -68,8 +101,11 @@ export function GameScreen() {
     }, durationMs);
   };
 
-  const feedNow = () =>
-    runActivity('eating', EAT_DURATION_MS, () => useNeedsStore.getState().feed());
+  const feedNow = (fromAsk: boolean) =>
+    runActivity('eating', EAT_DURATION_MS, () => {
+      useNeedsStore.getState().feed();
+      if (fromAsk) useProgressStore.getState().questEvent('fed-when-asked');
+    });
 
   const asking = activity === 'none' && isAskingForFood(needs);
   const pose: CatPose =
@@ -83,14 +119,19 @@ export function GameScreen() {
             ? 'sad'
             : 'idle';
 
-  const onSpotPress = (id: HomeSpotId) => {
+  const onHomeSpotPress = (id: HomeSpotId) => {
     if (activity !== 'none') return;
-    if (id === 'bowl') feedNow();
+    if (id === 'bowl') feedNow(false);
     // Ключевая сценка (спека §4): голодный котёнок просит — хозяин наполняет миску
-    if (id === 'owner' && asking) feedNow();
+    if (id === 'owner' && asking) feedNow(true);
     if (id === 'bed') {
       runActivity('sleeping', SLEEP_DURATION_MS, () => useNeedsStore.getState().sleep());
     }
+  };
+
+  const onYardSpotPress = (id: YardSpotId) => {
+    if (activity !== 'none') return;
+    void id; // доставка мышек хозяину — подключается вместе с мини-игрой
   };
 
   const onCatPress = () => {
@@ -98,17 +139,29 @@ export function GameScreen() {
     runActivity('petting', PET_DURATION_MS, () => useNeedsStore.getState().pet());
   };
 
+  const arrowNudge = arrowPulse.interpolate({ inputRange: [0, 1], outputRange: [0, 6] });
+
   return (
     <View style={styles.container} testID="game-screen">
-      <HomeBackground />
-      {HOME_SPOTS.map((spot) => (
-        <Pressable
-          key={spot.id}
-          testID={`spot-${spot.id}`}
-          style={[styles.spot, { left: spot.left, top: spot.top }]}
-          onPress={() => onSpotPress(spot.id)}
-        />
-      ))}
+      {scene === 'home' ? <HomeBackground /> : <YardBackground />}
+      {scene === 'home' &&
+        HOME_SPOTS.map((spot) => (
+          <Pressable
+            key={spot.id}
+            testID={`spot-${spot.id}`}
+            style={[styles.spot, { left: spot.left, top: spot.top }]}
+            onPress={() => onHomeSpotPress(spot.id)}
+          />
+        ))}
+      {scene === 'yard' &&
+        YARD_SPOTS.map((spot) => (
+          <Pressable
+            key={spot.id}
+            testID={`spot-${spot.id}`}
+            style={[styles.spot, { left: spot.left, top: spot.top }]}
+            onPress={() => onYardSpotPress(spot.id)}
+          />
+        ))}
       <View style={styles.catSlot}>
         {asking && (
           <View style={styles.bubble} testID="ask-bubble">
@@ -132,15 +185,48 @@ export function GameScreen() {
           </Animated.View>
         </Pressable>
       </View>
+      {/* стрелка переключения сцены (спека §3), 64dp */}
+      {scene === 'home' ? (
+        <Animated.View
+          style={[styles.arrow, styles.arrowRight, { transform: [{ translateX: arrowNudge }] }]}
+        >
+          <Pressable testID="go-yard" style={styles.arrowTouch} onPress={() => setScene('yard')}>
+            <Text style={styles.arrowText}>▶</Text>
+          </Pressable>
+        </Animated.View>
+      ) : (
+        <Animated.View
+          style={[
+            styles.arrow,
+            styles.arrowLeft,
+            { transform: [{ translateX: Animated.multiply(arrowNudge, -1) }] },
+          ]}
+        >
+          <Pressable testID="go-home" style={styles.arrowTouch} onPress={() => setScene('home')}>
+            <Text style={styles.arrowText}>◀</Text>
+          </Pressable>
+        </Animated.View>
+      )}
       <SafeAreaView style={styles.overlay} pointerEvents="box-none">
         <NeedsHud />
         {profile && <Text style={styles.name}>{profile.name}</Text>}
       </SafeAreaView>
+      <SafeAreaView style={styles.bottomBar} pointerEvents="box-none">
+        <StarBar />
+        <Pressable
+          testID="journal-button"
+          style={styles.journalButton}
+          onPress={() => setJournalOpen(true)}
+        >
+          <Text style={styles.journalIcon}>📜</Text>
+        </Pressable>
+      </SafeAreaView>
+      <JournalModal visible={journalOpen} onClose={() => setJournalOpen(false)} />
     </View>
   );
 }
 
-// Хотспоты 64dp, центрированы на объекте фона (спека §1: цели касания ≥ 64dp)
+// Хотспоты и кнопки 64dp, центрированы на объекте фона (спека §1: цели касания ≥ 64dp)
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFF7E6' },
   spot: {
@@ -167,6 +253,20 @@ const styles = StyleSheet.create({
   },
   bubbleText: { fontSize: 24 },
   hearts: { position: 'absolute', top: -8, right: -16, fontSize: 28, zIndex: 1 },
+  arrow: {
+    position: 'absolute',
+    top: '46%',
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    borderWidth: 2,
+    borderColor: '#D9C7A8',
+  },
+  arrowRight: { right: 8 },
+  arrowLeft: { left: 8 },
+  arrowTouch: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  arrowText: { fontSize: 24, color: '#5C4A32' },
   overlay: {
     position: 'absolute',
     top: 0,
@@ -176,5 +276,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
+  bottomBar: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    padding: 12,
+    alignItems: 'flex-end',
+    gap: 8,
+  },
   name: { fontSize: 18, color: '#5C4A32' },
+  journalButton: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    borderWidth: 2,
+    borderColor: '#D9C7A8',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  journalIcon: { fontSize: 30 },
 });

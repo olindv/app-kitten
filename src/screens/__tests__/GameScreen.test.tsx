@@ -1,8 +1,10 @@
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 
 import { clock } from '../../app/clock';
+import { initialActiveQuests } from '../../quests/engine';
 import { useNeedsStore } from '../../store/needsStore';
 import { useProfileStore } from '../../store/profileStore';
+import { useProgressStore } from '../../store/progressStore';
 import { EAT_DURATION_MS, GameScreen, PET_DURATION_MS, SLEEP_DURATION_MS } from '../GameScreen';
 
 const T0 = 1_700_000_000_000;
@@ -13,6 +15,13 @@ beforeEach(() => {
   jest.spyOn(clock, 'now').mockReturnValue(T0);
   useProfileStore.setState({ profile: { name: 'Тест', coatId: 'ginger', collarColor: null } });
   useNeedsStore.setState({ needs: { hunger: 100, energy: 100, mood: 100, updatedAt: T0 } });
+  useProgressStore.setState({
+    stars: 0,
+    playDays: [],
+    activeQuests: initialActiveQuests(),
+    completedLog: [],
+    celebration: null,
+  });
 });
 
 afterEach(() => {
@@ -87,4 +96,29 @@ test('во время еды другие действия игнорируют�
   expect(screen.getByTestId('cat-eating')).toBeTruthy();
   await advance(EAT_DURATION_MS);
   expect(useNeedsStore.getState().needs.energy).toBe(50); // сон не запустился
+});
+
+test('стрелка ведёт во двор и обратно', async () => {
+  await render(<GameScreen />);
+  expect(screen.getByTestId('home-background')).toBeTruthy();
+  await fireEvent.press(screen.getByTestId('go-yard'));
+  expect(screen.getByTestId('yard-background')).toBeTruthy();
+  expect(screen.queryByTestId('home-background')).toBeNull();
+  expect(screen.queryByTestId('spot-bowl')).toBeNull();
+  await fireEvent.press(screen.getByTestId('go-home'));
+  expect(screen.getByTestId('home-background')).toBeTruthy();
+});
+
+test('кнопка журнала открывает и закрывает модалку', async () => {
+  await render(<GameScreen />);
+  await fireEvent.press(screen.getByTestId('journal-button'));
+  expect(screen.getByTestId('journal-quest-catch-mice')).toBeTruthy();
+  await fireEvent.press(screen.getByTestId('journal-close'));
+  expect(screen.queryByTestId('journal-quest-catch-mice')).toBeNull();
+});
+
+test('маунт записывает день игры', async () => {
+  jest.spyOn(clock, 'now').mockReturnValue(new Date(2026, 6, 3, 12, 0, 0).getTime());
+  await render(<GameScreen />);
+  expect(useProgressStore.getState().playDays).toEqual(['2026-07-03']);
 });

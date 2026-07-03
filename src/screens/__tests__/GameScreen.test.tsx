@@ -167,6 +167,27 @@ test('кормление по просьбе эмитит fed-when-asked', async
   expect(useProgressStore.getState().celebration?.id).toBe('ask-food');
 });
 
+test('во дворе ловятся мышки, прогресс идёт по квесту', async () => {
+  await render(<GameScreen />);
+  await fireEvent.press(screen.getByTestId('go-yard'));
+  expect(screen.getByTestId('catch-layer-mouse')).toBeTruthy();
+  expect(screen.getByTestId('catch-layer-butterfly')).toBeTruthy();
+  await fireEvent.press(screen.getByTestId('target-mouse-0'));
+  await fireEvent.press(screen.getByTestId('target-mouse-0'));
+  expect(
+    useProgressStore.getState().activeQuests.find((q) => q.questId === 'catch-mice')?.progress,
+  ).toBe(2);
+  // после третьей мышки — стадия доставки, слой мышек исчезает
+  await fireEvent.press(screen.getByTestId('target-mouse-0'));
+  expect(screen.queryByTestId('catch-layer-mouse')).toBeNull();
+});
+
+test('дома слоёв ловли нет', async () => {
+  await render(<GameScreen />);
+  expect(screen.queryByTestId('catch-layer-mouse')).toBeNull();
+  expect(screen.queryByTestId('catch-layer-butterfly')).toBeNull();
+});
+
 test('кормление из миски без просьбы НЕ засчитывает квест', async () => {
   useProgressStore.setState({
     activeQuests: [

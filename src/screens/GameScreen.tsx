@@ -4,7 +4,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { clock } from '../app/clock';
 import { Cat, type CatPose } from '../cat/Cat';
+import { CatchTapLayer } from '../minigames/catchTap/CatchTapLayer';
 import { isAskingForFood } from '../needs/needsLogic';
+import { catchKindFor, currentStage } from '../quests/engine';
 import type { SceneId } from '../quests/registry';
 import { HOME_SPOTS, HomeBackground, type HomeSpotId } from '../scenes/HomeScene';
 import { YARD_SPOTS, YardBackground, type YardSpotId } from '../scenes/YardScene';
@@ -28,6 +30,7 @@ type Activity = 'none' | 'eating' | 'sleeping' | 'petting';
 export function GameScreen() {
   const profile = useProfileStore((s) => s.profile);
   const needs = useNeedsStore((s) => s.needs);
+  const activeQuests = useProgressStore((s) => s.activeQuests);
   const [scene, setScene] = useState<SceneId>('home');
   const [journalOpen, setJournalOpen] = useState(false);
   const [ballBurst, setBallBurst] = useState(0);
@@ -181,6 +184,24 @@ export function GameScreen() {
             onPress={() => onYardSpotPress(spot.id)}
           />
         ))}
+      {scene === 'yard' &&
+        activeQuests.map((q) => {
+          const kind = catchKindFor(q);
+          if (!kind) return null;
+          const stage = currentStage(q);
+          return (
+            <CatchTapLayer
+              key={q.questId}
+              kind={kind}
+              remaining={stage.count - q.progress}
+              onCatch={() =>
+                useProgressStore
+                  .getState()
+                  .questEvent(kind === 'mouse' ? 'mouse-caught' : 'butterfly-caught')
+              }
+            />
+          );
+        })}
       <View style={styles.catSlot}>
         {asking && (
           <View style={styles.bubble} testID="ask-bubble">

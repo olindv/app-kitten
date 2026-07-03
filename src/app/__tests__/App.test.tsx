@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react-native';
 
 import { App } from '../App';
 
-test('renders home placeholder', async () => {
+test('renders coat gallery placeholder', async () => {
   await render(<App />);
-  expect(screen.getByText('🐱 Мой Котёнок')).toBeTruthy();
+  expect(screen.getByTestId('gallery-ginger')).toBeTruthy();
 });

@@ -1858,6 +1858,53 @@ git push
 
 ---
 
+### Task 8.5: Идл-анимации котёнка (добавлено по фидбеку владельца на чекпоинте Task 4)
+
+_Владелец: статичный котёнок не даёт «ВАУ»-эффекта. Решение: фейслифт SVG сделан в Task 4 (градиенты, блики, румянец, бубенчик, тень); сюда — «жизнь»: дыхание и моргание. Инструмент — встроенный RN `Animated` (не Reanimated: идл-анимациям хватает JS-потока, ноль новых зависимостей, работает в Jest из коробки; Reanimated остаётся для мини-игр фазы 2)._
+
+**Files:**
+
+- Modify: `src/cat/Cat.tsx` (проп `animated`, моргание), `src/screens/GameScreen.tsx` (дыхание-обёртка + `animated`)
+- Test: `src/cat/__tests__/Cat.test.tsx` (моргание с fake timers)
+
+**Interfaces:**
+
+- Produces: `Cat` получает проп `animated?: boolean` (default false) — при true и открытых глазах котёнок моргает (глаза закрыты ~150 мс каждые 3–6 с). GameScreen оборачивает `<Cat animated />` в `Animated.View` с зацикленным «дыханием» (scale 1 ↔ 1.03, ~1.6 с на полуцикл).
+
+- [ ] **Step 1: Тест моргания (падает)** — в `Cat.test.tsx` добавить:
+
+```tsx
+test('animated: котёнок моргает по таймеру', async () => {
+  jest.useFakeTimers();
+  await render(<Cat coatId="ginger" animated />);
+  expect(screen.getByTestId('cat-idle')).toBeTruthy();
+  expect(screen.queryByTestId('cat-blink')).toBeNull();
+  act(() => jest.advanceTimersByTime(6_000)); // максимум интервала
+  expect(screen.getByTestId('cat-blink')).toBeTruthy();
+  act(() => jest.advanceTimersByTime(200)); // моргнул — глаза снова открыты
+  expect(screen.queryByTestId('cat-blink')).toBeNull();
+  jest.useRealTimers();
+});
+```
+
+(testID корня при моргании остаётся `cat-${pose}`; `cat-blink` — отдельный маркер-элемент внутри.)
+
+- [ ] **Step 2: Реализация моргания в Cat.tsx** — состояние `blinking`, `useEffect` при `animated && !eyesClosed`: `setTimeout` на 3000–6000 мс (рандом) → `blinking=true`, через 150 мс → false, перепланировать. Глаза: `eyesClosed || blinking` → закрытые дуги; при `blinking` рядом рендерится пустой `<G testID="cat-blink" />`.
+
+- [ ] **Step 3: Дыхание в GameScreen** — `Animated.loop(Animated.sequence([timing(1.03, 1600ms), timing(1, 1600ms)]))` на `Animated.Value`, обёртка `<Animated.View style={{ transform: [{ scale: breath }] }}>` вокруг `<Cat animated ... />`. `useNativeDriver: true`.
+
+- [ ] **Step 4: Все тесты + линт зелёные, ручная проверка на эмуляторе** (котёнок дышит и моргает).
+
+- [ ] **Step 5: Commit + push**
+
+```powershell
+git add src/cat src/screens
+git commit -m "feat: add idle breathing and blinking animations to kitten"
+git push
+```
+
+---
+
 ### Task 9: Финальная проверка фазы (Definition of Done)
 
 **Files:** нет новых (только возможные фиксы по результатам проверки).

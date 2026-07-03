@@ -3,11 +3,7 @@ import { strings } from '../i18n/strings.ru';
 export type SceneId = 'home' | 'yard';
 
 export type QuestId =
-  | 'catch-mice'
-  | 'catch-butterflies'
-  | 'play-ball'
-  | 'scratch-post'
-  | 'ask-food';
+  'catch-mice' | 'catch-butterflies' | 'play-ball' | 'scratch-post' | 'ask-food';
 
 // Игровые события: компоненты эмитят их через progressStore.questEvent,
 // движок квестов сам решает, какому активному квесту они засчитываются.

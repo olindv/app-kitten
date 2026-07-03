@@ -137,11 +137,7 @@ import { strings } from '../i18n/strings.ru';
 export type SceneId = 'home' | 'yard';
 
 export type QuestId =
-  | 'catch-mice'
-  | 'catch-butterflies'
-  | 'play-ball'
-  | 'scratch-post'
-  | 'ask-food';
+  'catch-mice' | 'catch-butterflies' | 'play-ball' | 'scratch-post' | 'ask-food';
 
 // Игровые события: компоненты эмитят их через progressStore.questEvent,
 // движок квестов сам решает, какому активному квесту они засчитываются.
@@ -1845,20 +1841,22 @@ const onHomeSpotPress = (id: HomeSpotId) => {
 В JSX внутри маппинга домашних спотов — рендерить бурст внутри Pressable клубка и когтеточки. Заменить рендер домашних спотов:
 
 ```tsx
-{scene === 'home' &&
-  HOME_SPOTS.map((spot) => (
-    <Pressable
-      key={spot.id}
-      testID={`spot-${spot.id}`}
-      style={[styles.spot, { left: spot.left, top: spot.top }]}
-      onPress={() => onHomeSpotPress(spot.id)}
-    >
-      {spot.id === 'ball' && <TapBurst emoji="🧶" trigger={ballBurst} testID="ball-burst" />}
-      {spot.id === 'scratcher' && (
-        <TapBurst emoji="🐾" trigger={scratchBurst} testID="scratch-burst" />
-      )}
-    </Pressable>
-  ))}
+{
+  scene === 'home' &&
+    HOME_SPOTS.map((spot) => (
+      <Pressable
+        key={spot.id}
+        testID={`spot-${spot.id}`}
+        style={[styles.spot, { left: spot.left, top: spot.top }]}
+        onPress={() => onHomeSpotPress(spot.id)}
+      >
+        {spot.id === 'ball' && <TapBurst emoji="🧶" trigger={ballBurst} testID="ball-burst" />}
+        {spot.id === 'scratcher' && (
+          <TapBurst emoji="🐾" trigger={scratchBurst} testID="scratch-burst" />
+        )}
+      </Pressable>
+    ));
+}
 ```
 
 - [ ] **Step 6: Запустить все тесты — зелёные**
@@ -2021,7 +2019,12 @@ export function ButterflySprite() {
       <Ellipse cx={65} cy={70} rx={13} ry={16} fill="#F5C98A" />
       {/* тельце и усики */}
       <Ellipse cx={50} cy={55} rx={7} ry={26} fill="#5C4A32" />
-      <Path d="M46 30 Q40 18 32 16 M54 30 Q60 18 68 16" stroke="#5C4A32" strokeWidth={3} fill="none" />
+      <Path
+        d="M46 30 Q40 18 32 16 M54 30 Q60 18 68 16"
+        stroke="#5C4A32"
+        strokeWidth={3}
+        fill="none"
+      />
     </Svg>
   );
 }
@@ -2216,24 +2219,26 @@ const activeQuests = useProgressStore((s) => s.activeQuests);
 Рендер слоёв — сразу после рендера спотов двора (`{scene === 'yard' && YARD_SPOTS.map(...)}`):
 
 ```tsx
-{scene === 'yard' &&
-  activeQuests.map((q) => {
-    const kind = catchKindFor(q);
-    if (!kind) return null;
-    const stage = currentStage(q);
-    return (
-      <CatchTapLayer
-        key={q.questId}
-        kind={kind}
-        remaining={stage.count - q.progress}
-        onCatch={() =>
-          useProgressStore
-            .getState()
-            .questEvent(kind === 'mouse' ? 'mouse-caught' : 'butterfly-caught')
-        }
-      />
-    );
-  })}
+{
+  scene === 'yard' &&
+    activeQuests.map((q) => {
+      const kind = catchKindFor(q);
+      if (!kind) return null;
+      const stage = currentStage(q);
+      return (
+        <CatchTapLayer
+          key={q.questId}
+          kind={kind}
+          remaining={stage.count - q.progress}
+          onCatch={() =>
+            useProgressStore
+              .getState()
+              .questEvent(kind === 'mouse' ? 'mouse-caught' : 'butterfly-caught')
+          }
+        />
+      );
+    });
+}
 ```
 
 - [ ] **Step 9: Запустить все тесты — зелёные**
@@ -2344,33 +2349,35 @@ const onYardSpotPress = (id: YardSpotId) => {
 Пульсирующее облачко над хозяином — рендер внутри Pressable спота двора (переиспользуем `arrowPulse` для пульса масштаба). Заменить рендер спотов двора:
 
 ```tsx
-{scene === 'yard' &&
-  YARD_SPOTS.map((spot) => (
-    <Pressable
-      key={spot.id}
-      testID={`spot-${spot.id}`}
-      style={[styles.spot, { left: spot.left, top: spot.top }]}
-      onPress={() => onYardSpotPress(spot.id)}
-    >
-      {spot.id === 'yard-owner' && awaitingDelivery && (
-        <Animated.View
-          testID="deliver-bubble"
-          style={[
-            styles.deliverBubble,
-            {
-              transform: [
-                {
-                  scale: arrowPulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.12] }),
-                },
-              ],
-            },
-          ]}
-        >
-          <Text style={styles.bubbleText}>🐭</Text>
-        </Animated.View>
-      )}
-    </Pressable>
-  ))}
+{
+  scene === 'yard' &&
+    YARD_SPOTS.map((spot) => (
+      <Pressable
+        key={spot.id}
+        testID={`spot-${spot.id}`}
+        style={[styles.spot, { left: spot.left, top: spot.top }]}
+        onPress={() => onYardSpotPress(spot.id)}
+      >
+        {spot.id === 'yard-owner' && awaitingDelivery && (
+          <Animated.View
+            testID="deliver-bubble"
+            style={[
+              styles.deliverBubble,
+              {
+                transform: [
+                  {
+                    scale: arrowPulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.12] }),
+                  },
+                ],
+              },
+            ]}
+          >
+            <Text style={styles.bubbleText}>🐭</Text>
+          </Animated.View>
+        )}
+      </Pressable>
+    ));
+}
 ```
 
 Стиль — добавить в `StyleSheet.create`:

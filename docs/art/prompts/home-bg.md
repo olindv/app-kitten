@@ -1,0 +1,3 @@
+Children's picture-book illustration for a cozy kids' pet game, soft gouache watercolor cartoon style, warm sunny palette, rounded friendly shapes, soft outlines, rich painterly detail. No text, no letters, no numbers, no watermark, no logo, no UI elements.
+
+Cozy cottage living room interior background: warm cream walls, horizontal wooden plank floor, a big window with light curtains and a sunny garden view centered in the upper half, a small kitchen corner with a stove and counter on the left edge, a soft round rug on the floor in the middle. No furniture in the foreground, no people, no animals.

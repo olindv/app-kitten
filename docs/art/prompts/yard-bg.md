@@ -1,0 +1,3 @@
+Children's picture-book illustration for a cozy kids' pet game, soft gouache watercolor cartoon style, warm sunny palette, rounded friendly shapes, soft outlines, rich painterly detail. No text, no letters, no numbers, no watermark, no logo, no UI elements.
+
+Cozy village backyard background: bright green grass meadow covers the lower half, a light wooden picket fence runs horizontally across the middle, sunny blue summer sky with a soft warm sun glow in the upper part, a few fluffy clouds, distant green bushes and treetops behind the fence. Empty scene: no animals, no people, no foreground tree, no buildings, no foreground flowers.

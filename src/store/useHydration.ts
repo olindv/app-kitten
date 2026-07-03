@@ -2,20 +2,24 @@ import { useEffect, useState } from 'react';
 
 import { useNeedsStore } from './needsStore';
 import { useProfileStore } from './profileStore';
+import { useProgressStore } from './progressStore';
 
-const bothHydrated = () =>
-  useProfileStore.persist.hasHydrated() && useNeedsStore.persist.hasHydrated();
+const allHydrated = () =>
+  useProfileStore.persist.hasHydrated() &&
+  useNeedsStore.persist.hasHydrated() &&
+  useProgressStore.persist.hasHydrated();
 
-// true, когда оба persist-стора загрузились из AsyncStorage.
+// true, когда все persist-сторы загрузились из AsyncStorage.
 // До этого показывается сплэш — иначе мигнёт экран создания у существующего игрока.
 export function useHydration(): boolean {
-  const [hydrated, setHydrated] = useState(bothHydrated);
+  const [hydrated, setHydrated] = useState(allHydrated);
 
   useEffect(() => {
-    const check = () => setHydrated(bothHydrated());
+    const check = () => setHydrated(allHydrated());
     const unsubs = [
       useProfileStore.persist.onFinishHydration(check),
       useNeedsStore.persist.onFinishHydration(check),
+      useProgressStore.persist.onFinishHydration(check),
     ];
     check();
     return () => unsubs.forEach((unsub) => unsub());

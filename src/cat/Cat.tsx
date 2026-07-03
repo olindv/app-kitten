@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import Svg, { Circle, Defs, Ellipse, G, Path, RadialGradient, Stop } from 'react-native-svg';
 
 import { COATS, shadeColor, type CoatId } from './coats';
@@ -9,12 +10,47 @@ export interface CatProps {
   collarColor?: string | null;
   pose?: CatPose;
   size?: number;
+  animated?: boolean; // моргание при открытых глазах
   testID?: string;
 }
 
-export function Cat({ coatId, collarColor = null, pose = 'idle', size = 160, testID }: CatProps) {
+const BLINK_MIN_DELAY_MS = 3_000;
+const BLINK_MAX_DELAY_MS = 6_000;
+const BLINK_DURATION_MS = 150;
+
+export function Cat({
+  coatId,
+  collarColor = null,
+  pose = 'idle',
+  size = 160,
+  animated = false,
+  testID,
+}: CatProps) {
   const c = COATS[coatId];
-  const eyesClosed = pose === 'sleeping' || pose === 'eating' || pose === 'happy';
+  const [blinking, setBlinking] = useState(false);
+  const poseEyesClosed = pose === 'sleeping' || pose === 'eating' || pose === 'happy';
+
+  useEffect(() => {
+    if (!animated || poseEyesClosed) {
+      setBlinking(false);
+      return;
+    }
+    let timer: ReturnType<typeof setTimeout>;
+    const schedule = () => {
+      const delay = BLINK_MIN_DELAY_MS + Math.random() * (BLINK_MAX_DELAY_MS - BLINK_MIN_DELAY_MS);
+      timer = setTimeout(() => {
+        setBlinking(true);
+        timer = setTimeout(() => {
+          setBlinking(false);
+          schedule();
+        }, BLINK_DURATION_MS);
+      }, delay);
+    };
+    schedule();
+    return () => clearTimeout(timer);
+  }, [animated, poseEyesClosed]);
+
+  const eyesClosed = poseEyesClosed || blinking;
   // id градиента уникален на окрас — котята разных окрасов живут на одном экране (галерея, карусель)
   const gradId = `cat-body-${coatId}`;
 
@@ -125,6 +161,8 @@ export function Cat({ coatId, collarColor = null, pose = 'idle', size = 160, tes
         <Path d="M140 86 Q128 87 118 90" />
         <Path d="M140 98 Q128 97 118 95" />
       </G>
+      {/* маркер моргания для тестов */}
+      {blinking && <G testID="cat-blink" />}
       {/* сон: z-z-z */}
       {pose === 'sleeping' && (
         <G stroke="#7A8BB5" strokeWidth={3} strokeLinecap="round" fill="none">

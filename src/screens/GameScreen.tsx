@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { AppState, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, AppState, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { clock } from '../app/clock';
@@ -14,6 +14,7 @@ export const TICK_INTERVAL_MS = 30_000;
 export const EAT_DURATION_MS = 2_000;
 export const PET_DURATION_MS = 1_500;
 export const SLEEP_DURATION_MS = 8_000; // спека §4: короткая анимация сна, не блокирует
+const BREATH_HALF_CYCLE_MS = 1_600;
 
 type Activity = 'none' | 'eating' | 'sleeping' | 'petting';
 
@@ -22,6 +23,27 @@ export function GameScreen() {
   const needs = useNeedsStore((s) => s.needs);
   const [activity, setActivity] = useState<Activity>('none');
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const breath = useRef(new Animated.Value(1)).current;
+
+  // «Дыхание»: лёгкая пульсация масштаба котёнка
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(breath, {
+          toValue: 1.03,
+          duration: BREATH_HALF_CYCLE_MS,
+          useNativeDriver: true,
+        }),
+        Animated.timing(breath, {
+          toValue: 1,
+          duration: BREATH_HALF_CYCLE_MS,
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [breath]);
 
   // Тик потребностей: на маунте, при возврате в foreground и раз в TICK_INTERVAL_MS
   useEffect(() => {
@@ -99,12 +121,15 @@ export function GameScreen() {
           </Text>
         )}
         <Pressable testID="cat-touch" onPress={onCatPress}>
-          <Cat
-            coatId={profile?.coatId ?? 'ginger'}
-            collarColor={profile?.collarColor ?? null}
-            pose={pose}
-            size={170}
-          />
+          <Animated.View style={{ transform: [{ scale: breath }] }}>
+            <Cat
+              coatId={profile?.coatId ?? 'ginger'}
+              collarColor={profile?.collarColor ?? null}
+              pose={pose}
+              size={170}
+              animated
+            />
+          </Animated.View>
         </Pressable>
       </View>
       <SafeAreaView style={styles.overlay} pointerEvents="box-none">

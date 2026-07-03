@@ -13,6 +13,7 @@ import { YARD_SPOTS, YardBackground, type YardSpotId } from '../scenes/YardScene
 import { useNeedsStore } from '../store/needsStore';
 import { useProfileStore } from '../store/profileStore';
 import { useProgressStore } from '../store/progressStore';
+import { CelebrationOverlay } from '../ui/CelebrationOverlay';
 import { NeedsHud } from '../ui/NeedsHud';
 import { StarBar } from '../ui/StarBar';
 import { TapBurst } from '../ui/TapBurst';
@@ -286,6 +287,7 @@ export function GameScreen() {
         </Pressable>
       </SafeAreaView>
       <JournalModal visible={journalOpen} onClose={() => setJournalOpen(false)} />
+      <CelebrationOverlay />
     </View>
   );
 }

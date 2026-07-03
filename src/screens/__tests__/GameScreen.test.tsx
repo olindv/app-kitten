@@ -207,6 +207,12 @@ test('без стадии доставки облачка нет и тап по 
   expect(useProgressStore.getState().stars).toBe(0);
 });
 
+test('завершение квеста показывает фейерверк', async () => {
+  await render(<GameScreen />);
+  for (let i = 0; i < 5; i++) await fireEvent.press(screen.getByTestId('spot-ball'));
+  expect(screen.getByTestId('celebration-icon')).toHaveTextContent('🧶');
+});
+
 test('дома слоёв ловли нет', async () => {
   await render(<GameScreen />);
   expect(screen.queryByTestId('catch-layer-mouse')).toBeNull();

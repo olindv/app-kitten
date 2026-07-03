@@ -351,13 +351,20 @@ git commit -m "feat: app entry with navigation shell and placeholder screen"
 
 **Files:**
 
-- Create: `src/app/__tests__/App.test.tsx`
+- Create: `src/app/__tests__/App.test.tsx`, `jest.setup.js`
 - Modify: `package.json` (jest-конфиг, скрипт, dev-зависимости)
 
 **Interfaces:**
 
 - Consumes: `App` из `src/app/App.tsx` (Task 4).
 - Produces: `npm test` — обязательный шаг всех задач фазы 1+.
+
+_Уточнения по факту выполнения (важно для тестов фазы 1+):_
+
+- _@testing-library/react-native v14: `render` асинхронный — тесты пишутся `async` с `await render(...)`, запросы через `screen`, не через результат render._
+- _`babel-preset-expo` ставится явно в devDependencies (шаблон SDK 57 его не тянет)._
+- _`react-native-safe-area-context` мокается в `jest.setup.js`: `jest.mock('react-native-safe-area-context', () => require('react-native-safe-area-context/jest/mock').default)` — иначе дерево обрывается на нативном провайдере._
+- _`react-native-worklets` добавлен в transformIgnorePatterns._
 
 - [ ] **Step 1: Установить тестовые зависимости**
 

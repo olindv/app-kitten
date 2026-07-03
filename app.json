@@ -16,9 +16,6 @@
       },
       "predictiveBackGestureEnabled": false
     },
-    "plugins": [
-      "expo-audio",
-      "expo-asset"
-    ]
+    "plugins": ["expo-audio", "expo-asset"]
   }
 }
